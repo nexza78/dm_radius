@@ -140,13 +140,6 @@
     <item row="2" column="0" colspan="4">
      <widget class="QGraphicsView" name="graphicsView"/>
     </item>
-    <item row="0" column="3">
-     <widget class="QPushButton" name="pushButton_open">
-      <property name="text">
-       <string>Открыть</string>
-      </property>
-     </widget>
-    </item>
     <item row="3" column="3">
      <widget class="QSpinBox" name="spinBox">
       <property name="minimum">

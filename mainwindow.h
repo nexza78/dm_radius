@@ -22,6 +22,8 @@
 #include <QStringList>
 #include <vector>
 
+#include "CubicBezier.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -33,11 +35,10 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    std::vector<std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>>> paths;
 
 private slots:
     void on_pushButton_review_clicked();
-
-    void on_pushButton_open_clicked();
 
     void on_pushButton_analyze_clicked();
 
@@ -52,14 +53,26 @@ private:
     int radius_number = 0;
     static QList<QGraphicsRectItem *> getElements(const QString filename);
     static QRectF getSizes(const QString filename);
+    /// @brief
+    /// Получить точку, следующую после индекса j0 строки points
     static float get_point(QString points, int &j0);
+
+     /// @brief
+     /// Разделение строки по частям. На выходе получается вектро из пар, первым элементом которых будет буква,
+     /// обозначающая тип линии, а вторым элементом будет вектор из точек. Все точки имеют две координаты. Точки нельзя
+     /// считать реальными значениями, т.к. обработка относительности точек еще не произошла
     static std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> split(QString points);
-    static std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> toUpperCase(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points, bool z);
-    static std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> merge(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
+
+    ///@brief Обработка относительности, замена H и V на L
+    static std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> toUpperCase(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
+
+    ///@brief Слияние одинаковых элементов (вроде не всех), обработка случая более одного элемента в М
+    void merge();
     void angles(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
     void radiuses(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
     void rad_cubic(std::pair<float, float> P0, std::pair<float, float> P1,std::pair<float, float> P2,std::pair<float, float> P3);
     void degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2);
+    void split2(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> );
     float ratio_x = 1;
     float ratio_y = 1;
     float scale = 1;
