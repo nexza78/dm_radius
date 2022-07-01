@@ -24,6 +24,48 @@ float CubicBezier::ytt(float t, float scale, float ratio){
     return (6*(1-t)*P0.second + (18*t - 12)*P1.second + (6-18*t)*P2.second + 6*t*P3.second)*ratio*scale;
 }
 
+float CubicBezier::t_intersec_inputX(float x, float scale, float ratio, float epsilon){
+    float t0 = 0;
+    float t = 0;
+    float old = this->coordinateX(t0, scale, ratio)/(ratio * scale);
+    float newVal = this->coordinateX(t, scale, ratio)/(ratio * scale);
+    while(t <= 1){
+        if(x == old){
+            return old;
+        }
+        else if(x == newVal){
+            return newVal;
+        }
+        else if(x > std::min(old, newVal) && x < std::max(old, newVal)){
+            if(std::min(old, newVal) != old){
+                float temp = t0;
+                t0 = t;
+                t = temp;
+            }
+            break;
+        }
+        t0 = t;
+        t += 0.1;
+        old = this->coordinateX(t0, scale, ratio)/(ratio * scale);
+        newVal = this->coordinateX(t, scale, ratio)/(ratio * scale);
+    }
+    if(t > 1){
+        return -1;
+    }
+    else{
+        float answer = coordinateX((t + t0)/2.0, scale, ratio)/(ratio * scale);
+        while(std::abs(x - answer) > epsilon){
+            if(x > answer){
+                t0 = (t + t0)/2.0;
+            }
+            else{
+                t = (t + t0)/2.0;
+            }
+        }
+        return (t + t0)/2.0;
+    }
+}
+
 void CubicBezier::radiuses(QGraphicsScene *&scene, float scale){
     float minR = INFINITY;
     float cx = 0;

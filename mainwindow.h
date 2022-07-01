@@ -69,6 +69,8 @@ private:
     ///@brief Слияние одинаковых элементов (вроде не всех), обработка случая более одного элемента в М
     void merge();
     void angles(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
+    bool inner_angle(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points, std::pair<float, float> check_point);
+    void intersec_line(std::vector<std::pair<float, float>> &intersections, std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> check_point);
     void radiuses(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
     void rad_cubic(std::pair<float, float> P0, std::pair<float, float> P1,std::pair<float, float> P2,std::pair<float, float> P3);
     void degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2);

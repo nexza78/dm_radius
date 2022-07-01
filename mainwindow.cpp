@@ -35,6 +35,14 @@ void MainWindow::on_pushButton_review_clicked()
     qDebug() << main_item->renderer()->defaultSize().height() << main_item->renderer()->viewBox().height();
 }
 
+//qDebug() << i << "############################-----toUpperCase------######################################";
+//for(int k = 0; k < prepare_vector.size(); k++){
+//    qDebug() << prepare_vector[k].first;
+//    for(int j = 0; j < prepare_vector[k].second.size(); j ++){
+//        qDebug() << j<< ' '<< prepare_vector[k].second[j].first <<", "<< prepare_vector[k].second[j].second;
+//    }
+//}
+
 void MainWindow::on_pushButton_analyze_clicked()
 {
     paths.clear();
@@ -60,15 +68,6 @@ void MainWindow::on_pushButton_analyze_clicked()
         QString cur_data = path_data.attribute("d");
         std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>>  prepare_vector = split(cur_data);
         prepare_vector = toUpperCase(prepare_vector);
-
-        //qDebug() << i << "############################-----toUpperCase------######################################";
-        //for(int k = 0; k < prepare_vector.size(); k++){
-        //    qDebug() << prepare_vector[k].first;
-        //    for(int j = 0; j < prepare_vector[k].second.size(); j ++){
-        //        qDebug() << j<< ' '<< prepare_vector[k].second[j].first <<", "<< prepare_vector[k].second[j].second;
-        //    }
-        //}
-
         split2(prepare_vector);
 
         //проверка работы, вывод в дебаг
@@ -84,8 +83,8 @@ void MainWindow::on_pushButton_analyze_clicked()
                 qDebug() << j<< ' '<< i[k].second[j].first <<", "<< i[k].second[j].second;
             }
         }
-        this->angles(i);
-        this->radiuses(i);
+        angles(i);
+        radiuses(i);
     }
     file.close();
     return;
@@ -346,96 +345,98 @@ void MainWindow::merge(){
                     break;
             }
         }
-        qDebug() << "############################-----MERGE------######################################";
-        for(int k = 0; k < std::max(cur_path.size(), new_path.size()); k++){
-            if(k < new_path.size() && k < cur_path.size()){
-                qDebug() << "            " << cur_path[k].first <<  "            ""            " << new_path[k].first;
-                for(int j = 0; j < std::max(new_path[k].second.size(), cur_path[k].second.size()); j ++){
-                    if(j < cur_path[k].second.size() && j < new_path[k].second.size()){
-                        qDebug() << j<< ' '<< cur_path[k].second[j].first <<", "<< cur_path[k].second[j].second << "            "<< new_path[k].second[j].first <<", "<< new_path[k].second[j].second;
-                    }
-                    else if(j >= cur_path[k].second.size()){
-                        qDebug() << j<< ' '<< "пусто" <<"            ""            "<< new_path[k].second[j].first <<", "<< new_path[k].second[j].second;
-                    }
-                    else{
-                        qDebug() << j<< ' '<< cur_path[k].second[j].first <<", "<< cur_path[k].second[j].second << "            "<< "пусто";
-                    }
+        //qDebug() << "############################-----MERGE------######################################";
+        //for(int k = 0; k < std::max(cur_path.size(), new_path.size()); k++){
+            //if(k < new_path.size() && k < cur_path.size()){
+            //    qDebug() << "            " << cur_path[k].first <<  "            ""            " << new_path[k].first;
+            //    for(int j = 0; j < std::max(new_path[k].second.size(), cur_path[k].second.size()); j ++){
+            //        if(j < cur_path[k].second.size() && j < new_path[k].second.size()){
+            //            qDebug() << j<< ' '<< cur_path[k].second[j].first <<", "<< cur_path[k].second[j].second << "            "<< new_path[k].second[j].first <<", "<< new_path[k].second[j].second;
+            //        }
+            //        else if(j >= cur_path[k].second.size()){
+            //            qDebug() << j<< ' '<< "пусто" <<"            ""            "<< new_path[k].second[j].first <<", "<< new_path[k].second[j].second;
+            //        }
+            //        else{
+            //            qDebug() << j<< ' '<< cur_path[k].second[j].first <<", "<< cur_path[k].second[j].second << "            "<< "пусто";
+            //        }
+            //    }
+            //}
+            //else if(k >= cur_path.size()){
+            //    qDebug() << "пусто" << "            ""            "<< new_path[k].first;
+
+            //    for(int j = 0; j < new_path[k].second.size(); j ++){
+            //        qDebug() << j<< ' '<< "пусто" <<"            ""            "<< new_path[k].second[j].first <<", "<< new_path[k].second[j].second;
+
+            //    }
+            //}
+            //else{
+            //    qDebug() << "            " << cur_path[k].first <<  "            ""            ""            " << "пусто";
+            //    for(int j = 0; j < cur_path[k].second.size(); j ++){
+            //            qDebug() << j<< ' '<< cur_path[k].second[j].first <<", "<< cur_path[k].second[j].second << "            "<< "пусто";
+
+            //    }
+            //}
+        //}
+        paths[k] = new_path;
+    }
+}
+
+float MainWindow::intersec_line(std::pair<float, float> P0, std::pair<float, float> P1, float x){
+    //check dubles!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    return (-P0.first*P1.second + P1.first*P0.second + (P0.second - P1.second)*x)/(P1.first - P0.first);
+}
+
+bool MainWindow::inner_angle(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> path, std::pair<float, float> check_point){
+    std::vector<float> intersections;
+    for(int i = 1; i < path.size(); i++){
+        if(path[i].first == 'L'){
+            if((check_point.first <= path[i-1].second.back().first && check_point.first >= path[i].second[0].first) || (check_point.first >= path[i-1].second.back().first && check_point.first <= path[i].second[0].first)){
+                intersections.push_back(intersec_line(path[i-1].second.back(), path[i].second[0], check_point.first));
+            }
+            for(int j = 0; j < path[i].second.size() - 1; j++){
+                if((check_point.first <= path[i].second[j].first && check_point.first >= path[i].second[j + 1].first) || (check_point.first >= path[i].second[j].first && check_point.first <= path[i].second[j + 1].first)){
+                   intersections.push_back(intersec_line(path[i].second[j], path[i].second[j + 1], check_point.first));
                 }
             }
-            else if(k >= cur_path.size()){
-                qDebug() << "пусто" << "            ""            "<< new_path[k].first;
-
-                for(int j = 0; j < new_path[k].second.size(); j ++){
-                    qDebug() << j<< ' '<< "пусто" <<"            ""            "<< new_path[k].second[j].first <<", "<< new_path[k].second[j].second;
-
-                }
-            }
-            else{
-                qDebug() << "            " << cur_path[k].first <<  "            ""            ""            " << "пусто";
-                for(int j = 0; j < cur_path[k].second.size(); j ++){
-                        qDebug() << j<< ' '<< cur_path[k].second[j].first <<", "<< cur_path[k].second[j].second << "            "<< "пусто";
-
+            if(i + 1 != path.size()){
+                if((check_point.first <= path[i+1].second[0].first && check_point.first >= path[i].second.back().first) || (check_point.first >= path[i+1].second[0].first && check_point.first <= path[i].second.back().first)){
+                    intersections.push_back(intersec_line(path[i+1].second[0], path[i].second.back(), check_point.first));
                 }
             }
         }
-        paths[k] = new_path;
+        else{
+            std::pair<float, float> prev_point = path[i-1].second.back();
+            for(int i = 0; i < path[i].second.size()-2; i += 3){
+                CubicBezier curve(prev_point, path[i].second[i], path[i].second[i + 1], path[i].second[i + 2]);
+                float t0 = 0;
+                float t = 0;
+                float old = curve.coordinateX(t0, scale, ratio_x);
+                float newVal = curve.coordinateX(t, scale, ratio_x);
+                while(true){
+                    if(check_point.first == old){
+                        newVal = -1;
+                        break;
+                    }
+                    else if(check_point.first == newVal){
+                        old = -1;
+                        break;
+                    }
+                    else if(check_point.first > std::min(old, newVal) && check_point.first < std::max(old, newVal)){
+                        break;
+                    }
+                    t0 = t;
+                    t += 0.1;
+                    old = curve.coordinateX(t0, scale, ratio_x);
+                    newVal = curve.coordinateX(t, scale, ratio_x);
+                }
+            }
+        }
     }
-
-    //смысл в принципе понятен - если в М больше одной точки, то создаем Л и туда все эти точки запихиваем, но какая-то хуйня
-    //честно говоря думаю что в М не должно быть более одной точки
-    //if(points[0].second.size() > 1){
-    //    M_flag = 1;
-    //    std::vector<std::pair<float, float>> fromMtoL;
-    //    for(int i = 1; i < points[0].second.size(); i ++){
-    //        fromMtoL.push_back(points[0].second[i]);
-    //    }
-    //    res.push_back(std::make_pair('L', fromMtoL));
-    //}
-    //если два подряд элемента points начинаются с одинаковых меток типа линии, то соединить в один элемент
-
-    //std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> res;
-    //std::vector<std::pair<float, float>> init_vect;
-    //init_vect.push_back(points[0].second[0]);
-    //res.push_back(std::make_pair('M', init_vect));
-    //bool M_flag = 0;
-    //
-    //int i0 = 1;
-    //int i = 2;
-    //while(i <= points.size()){
-    //    while(i != points.size()){
-    //        if(points[i0].first == points[i].first){
-    //            i++;
-    //        }
-    //        else{
-    //            break;
-    //        }
-    //    }
-    //    //можно переделать покомпактнее
-    //    if(i - i0 == 1){
-    //        res.push_back(points[i0]);
-    //    }
-    //    else{
-    //        res.push_back(points[i0]);
-    //        for(int j = i0 + 1; j < i; j++){
-    //            for(int k = 0; k < points[j].second.size(); k++){
-    //                res[res.size()-1].second.push_back(points[j].second[k]);
-    //            }
-    //        }
-    //    }
-    //    i0 = i;
-    //    i++;
-    //}
-    //так понимаю если в М было больше двух штук элементов и третий элемент тоже Л, то второй и третий элементы сливаются
-    //if(M_flag && res.size() > 2){
-    //    if(res[2].first == 'L'){
-    //        for(int i = 0; i < res[2].second.size(); i++){
-    //            res[1].second.push_back(res[2].second[i]);
-    //        }
-    //        res.erase(res.begin() + 2);
-    //    }
-    //}
-    //return res;
+    return true;
 }
+
+
+
 
 void MainWindow::degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2){
     float c2 = (P0.first - P1.first)*(P0.first - P1.first) + (P0.second - P1.second)*(P0.second - P1.second);
@@ -477,138 +478,47 @@ void MainWindow::degrees(std::pair<float, float> P0, std::pair<float, float> P1,
 void MainWindow::angles(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points){
     for(int i = 1; i < points.size(); i++){
         if(points[i].first == 'L'){
-            if(points[i].second.size() >= 3){
-                for(int j = 1; j < points[i].second.size() - 1; j++){
-                    degrees(points[i].second[j-1], points[i].second[j], points[i].second[j+1]);
-                }
+            for(int j = 1; j < points[i].second.size() - 1; j++){
+                degrees(points[i].second[j-1], points[i].second[j], points[i].second[j+1]);
             }
         }
         else if(points[i].first == 'C'){
-            if(points[i].second.size() > 3){
-                for(int j = 1; j < points[i].second.size() - 2; j += 3){
-                    degrees(points[i].second[j], points[i].second[j+1], points[i].second[j+2]);
-                }
-            }
-        }
-        else if(points[i].first == 'Q'){
-            if(points[i].second.size() > 2){
-                for(int j = 0; j < points[i].second.size() - 2; j += 2){
-                    degrees(points[i].second[j], points[i].second[j+1], points[i].second[j+2]);
-                }
+            for(int j = 1; j < points[i].second.size() - 2; j += 3){
+                degrees(points[i].second[j], points[i].second[j+1], points[i].second[j+2]);
             }
         }
     }
-    //на стыке
-    for(int i = 1;i < points.size() - 2; i ++){
-        if(points[i].first == 'C'){
-            std::pair<float,float> P0 = points[i].second[ points[i].second.size()-2];
-            std::pair<float,float> P1 = points[i].second[ points[i].second.size()-1];
-            std::pair<float,float> P2 = points[i+1].second[0];
-            degrees(P0, P1, P2);
+
+    for(int i = 1;i < points.size() - 1; i ++){
+        std::pair<float,float> P0;
+        std::pair<float,float> P1;
+        std::pair<float,float> P2;
+        if(points[i].second.size() >= 2){
+            P0 = points[i].second[points[i].second.size()-2];
+            P1 = points[i].second.back();
+            P2 = points[i+1].second[0];
         }
-        else if(points[i].first == 'L'){
+        else{
+            P0 = points[i-1].second.back();
+            P1 = points[i].second[0];
+            P2 = points[i+1].second[0];
+        }
+        degrees(P0, P1, P2);
+        if(points[i-1].first == 'M' && points[i].first == 'L'){
             if(points[i].second.size() >= 2){
-                std::pair<float,float> P0 = points[i].second[ points[i].second.size()-2];
-                std::pair<float,float> P1 = points[i].second[ points[i].second.size()-1];
-                std::pair<float,float> P2 = points[i+1].second[0];
-                degrees(P0, P1, P2);
+                P0 = points[i-1].second[0];
+                P1 = points[i].second[0];
+                P2 = points[i].second[1];
             }
             else{
-                std::pair<float,float> P0 = points[i-1].second[ points[i].second.size()-1];
-                std::pair<float,float> P1 = points[i].second[0];
-                std::pair<float,float> P2 = points[i+1].second[0];
-                degrees(P0, P1, P2);
+                P0 = points[i-1].second[0];
+                P1 = points[i].second[0];
+                P2 = points[i+1].second[0];
             }
-            if(points[i-1].first == 'M'){
-                if(points[i].second.size() >= 2){
-                    std::pair<float,float> P0 = points[i-1].second[0];
-                    std::pair<float,float> P1 = points[i].second[0];
-                    std::pair<float,float> P2 = points[i].second[1];
-                    degrees(P0, P1, P2);
-                }
-                else{
-                    std::pair<float,float> P0 = points[i-1].second[0];
-                    std::pair<float,float> P1 = points[i].second[0];
-                    std::pair<float,float> P2 = points[i+1].second[0];
-                    degrees(P0, P1, P2);
-                }
-            }
+            degrees(P0, P1, P2);
         }
     }
 }
-
-QList<QGraphicsRectItem *> MainWindow::getElements(const QString filename)
-{
-    QList<QGraphicsRectItem *> rectList;    // Объявим в стеке список прямоугольников
-
-    QDomDocument doc;       // объект документа
-    QFile file(filename);   // Открываем наш SVG-файл
-    // Если он не открылся или не удалось передать содержимое в QDocDocument
-    if (!file.open(QIODevice::ReadOnly) || !doc.setContent(&file))
-        return rectList;    // то возвратим список, но пустой
-
-    // Ищем в документе все объекты с тегом g
-    QDomNodeList gList = doc.elementsByTagName("g");
-    QDomNodeList pathList = doc.elementsByTagName("path");
-    // Начинаем их перебирать
-    for (int i = 0; i < pathList.size(); i++) {
-        QDomNode gNode = pathList.item(i);     // Выделяем из списка ноду
-        QDomElement path_data = gNode.toElement();
-        qDebug() << path_data.attribute("d");
-        QString cur_data = path_data.attribute("d");
-        std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> repair_vector = split(cur_data);
-/*
-        qDebug() << repair_vector;
-        repair_vector = toUpperCase(repair_vector);
-        qDebug() << repair_vector;
-        repair_vector = merge(repair_vector);
-        qDebug() << repair_vector;*/
-    }
-    //for (int i = 0; i < gList.size(); i++) {
-    //    QDomNode gNode = gList.item(i);     // Выделяем из списка ноду
-    //    QDomElement path_data = gNode.firstChildElement("path");
-    //     //И ищем в ней элемент c тегом rect
-    //     //QDomElement path_datas = gNode.
-    //    if (path_data.isNull()){
-    //        continue;
-    //    // Если полученный элементы не нулевой, то
-    //    } else {
-    //        // начинаем формировать прямоугольник
-    //        QGraphicsRectItem *path = new QGraphicsRectItem();
-    //        // Этот флаг делает объект перемещаемым, потребуется для проверки
-    //        path->setFlag(QGraphicsItem::ItemIsMovable);
-    //        // Забираем размеры из тега rect
-    //        QDomElement gElement = gNode.toElement();
-    //        qDebug() << path_data.attribute("d");
-    //    }
-    //}
-    file.close();
-    return rectList;
-}
-
-//QRectF MainWindow::getSizes(const QString filename)
-//{
-//    QDomDocument doc;       // инициализируем в стеке объект QDomDocument
-//    QFile file(filename);   // Открываем наш SVG-файл
-//    // Если он не открылся или не удалось передать содержимое в QDocDocument
-//    if (!file.open(QIODevice::ReadOnly) || !doc.setContent(&file))
-//        return QRectF(0,0,200,200); // то возвратим значения для сцены по умолчанию
-//
-//    /* Далее забираем список элементов с тегом svg.
-//     * В случае, если список элементов будет не пустой,
-//     * то заберём размеры графической сцены.
-//     * */
-//    QDomNodeList list = doc.elementsByTagName("svg");
-//    if(list.length() > 0) {
-//        QDomElement svgElement = list.item(0).toElement();
-//        QStringList parameters = svgElement.attribute("viewBox").split(" ");
-//        return QRectF(parameters.at(0).toInt(),
-//                      parameters.at(1).toInt(),
-//                      parameters.at(2).toInt(),
-//                      parameters.at(3).toInt());
-//    }
-//    return QRectF(0,0,200,200);
-//}
 
 
 void MainWindow::on_spinBox_valueChanged(int arg1)
