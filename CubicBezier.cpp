@@ -24,46 +24,52 @@ float CubicBezier::ytt(float t, float scale, float ratio){
     return (6*(1-t)*P0.second + (18*t - 12)*P1.second + (6-18*t)*P2.second + 6*t*P3.second)*ratio*scale;
 }
 
-float CubicBezier::t_intersec_inputX(float x, float scale, float ratio, float epsilon){
+void CubicBezier::t_intersec_inputX(std::vector<float> &intersections, float x, float scale, float ratio, float ratio_y, float epsilon){
     float t0 = 0;
     float t = 0;
     float old = this->coordinateX(t0, scale, ratio)/(ratio * scale);
     float newVal = this->coordinateX(t, scale, ratio)/(ratio * scale);
     while(t <= 1){
+        qDebug() << t << "PIDORAS";
         if(x == old){
-            return old;
+            intersections.push_back(coordinateY(t, scale, ratio_y)/(ratio_y * scale));
+            qDebug() << t << "HUETA";
         }
         else if(x == newVal){
-            return newVal;
+            intersections.push_back(coordinateY(t, scale, ratio_y)/(ratio_y * scale));
+            qDebug() << t << "ILI NET";
         }
         else if(x > std::min(old, newVal) && x < std::max(old, newVal)){
+            qDebug() << t << "PIDORASINA";
+
+            float t0_here = t0;
+            float t_here = t;
             if(std::min(old, newVal) != old){
-                float temp = t0;
-                t0 = t;
-                t = temp;
+                t0_here = t;
+                t_here = t0;
             }
-            break;
+            qDebug() << t << "VOT V CHEM VOPROS" << x;
+            float answer = coordinateX((t_here + t0_here)/2.0, scale, ratio)/(ratio * scale);
+            while(std::abs(x - answer) > epsilon){
+                if(x > answer){
+                    t0_here = (t_here + t0_here)/2.0;
+                }
+                else{
+                    t_here = (t_here + t0_here)/2.0;
+                }
+                answer = coordinateX((t_here + t0_here)/2.0, scale, ratio)/(ratio * scale);
+            }
+            intersections.push_back(coordinateY((t_here + t0_here)/2.0, scale, ratio_y)/(ratio_y * scale));
         }
+        qDebug() << t << "PIDOR";
         t0 = t;
         t += 0.1;
         old = this->coordinateX(t0, scale, ratio)/(ratio * scale);
         newVal = this->coordinateX(t, scale, ratio)/(ratio * scale);
+
+        qDebug() << t << "IDI SVOEY DOROGOY STALKER";
     }
-    if(t > 1){
-        return -1;
-    }
-    else{
-        float answer = coordinateX((t + t0)/2.0, scale, ratio)/(ratio * scale);
-        while(std::abs(x - answer) > epsilon){
-            if(x > answer){
-                t0 = (t + t0)/2.0;
-            }
-            else{
-                t = (t + t0)/2.0;
-            }
-        }
-        return (t + t0)/2.0;
-    }
+    return;
 }
 
 void CubicBezier::radiuses(QGraphicsScene *&scene, float scale){

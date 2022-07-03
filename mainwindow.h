@@ -12,6 +12,7 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsSvgItem>
+#include <QGraphicsTextItem>
 #include <QMessageBox>
 #include <QStringRef>
 #include <QSvgGenerator>
@@ -56,7 +57,7 @@ private:
     /// @brief
     /// Получить точку, следующую после индекса j0 строки points
     static float get_point(QString points, int &j0);
-
+    const float pi = 3.14159265358979323846;
      /// @brief
      /// Разделение строки по частям. На выходе получается вектро из пар, первым элементом которых будет буква,
      /// обозначающая тип линии, а вторым элементом будет вектор из точек. Все точки имеют две координаты. Точки нельзя
@@ -68,12 +69,12 @@ private:
 
     ///@brief Слияние одинаковых элементов (вроде не всех), обработка случая более одного элемента в М
     void merge();
-    void angles(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
-    bool inner_angle(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points, std::pair<float, float> check_point);
-    void intersec_line(std::vector<std::pair<float, float>> &intersections, std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> check_point);
+    void angles();
+    bool inner_angle(std::pair<float, float> check_point);
+    float intersec_line(std::pair<float, float> P0, std::pair<float, float> P1, float x);
     void radiuses(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
     void rad_cubic(std::pair<float, float> P0, std::pair<float, float> P1,std::pair<float, float> P2,std::pair<float, float> P3);
-    void degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2);
+    void degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2, std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> path);
     void split2(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> );
     float ratio_x = 1;
     float ratio_y = 1;

@@ -30,7 +30,7 @@ public:
     float coordinateX(float t, float scale, float ratio = 1);
     /// @brief Получить координату игрек точки при данном параметре t
     float coordinateY(float t, float scale, float ratio = 1);
-    float t_intersec_inputX(float x, float scale, float ratio, float epsilon);
+    void t_intersec_inputX(std::vector<float> &intersections, float x, float scale, float ratio, float ratio_y, float epsilon);
     void radiuses(QGraphicsScene *&scene, float scale);
 };
 
