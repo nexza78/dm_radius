@@ -69,13 +69,16 @@ private:
 
     ///@brief Слияние одинаковых элементов (вроде не всех), обработка случая более одного элемента в М
     void merge();
+    void check_dubles();
+    float distance(std::pair<float, float> P0, std::pair<float, float> P1);
     void angles();
     bool inner_angle(std::pair<float, float> check_point);
     float intersec_line(std::pair<float, float> P0, std::pair<float, float> P1, float x);
-    void radiuses(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
+    void radiuses();
     void rad_cubic(std::pair<float, float> P0, std::pair<float, float> P1,std::pair<float, float> P2,std::pair<float, float> P3);
     void degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2, std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> path);
     void split2(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> );
+
     float ratio_x = 1;
     float ratio_y = 1;
     float scale = 1;
