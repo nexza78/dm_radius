@@ -46,6 +46,8 @@ void MainWindow::on_pushButton_review_clicked()
 void MainWindow::on_pushButton_analyze_clicked()
 {
     paths.clear();
+    sharp_ang_number = 0;
+    obtuse_ang_number = 0;
 
     const QString filename = ui->lineEdit_path->text();
     //QList<QGraphicsRectItem *> rectList;    // Объявим в стеке список прямоугольников
@@ -104,6 +106,9 @@ void MainWindow::on_pushButton_analyze_clicked()
     //        }
     //    }
     //}
+    std::set<std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>>> say_no_to_dubles(paths.begin(), paths.end());
+    std::vector<std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>>> new_path(say_no_to_dubles.begin(), say_no_to_dubles.end());
+    paths = new_path;
     check_dubles();
 
     merge();
@@ -320,19 +325,18 @@ float MainWindow::distance(std::pair<float, float> P0, std::pair<float, float> P
 void MainWindow::split2(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> cur_path){
     std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> cur_add_path;
     //int schet = 0;
-    int schet = 0;
     for(std::pair<QChar,std::vector<std::pair<float, float>>> i: cur_path){
         if(i.first == 'Z'){
             //для обработки стыка (чтобы не надо было отдельно его обрабатывать)
 
             paths.push_back(cur_add_path);
-            qDebug() <<  schet << "############################-----SPLIT 2------######################################";
-            for(int k = 0; k < cur_add_path.size(); k++){
-                qDebug() << cur_add_path[k].first;
-                for(int j = 0; j < cur_add_path[k].second.size(); j ++){
-                    qDebug() << j<< ' '<< cur_add_path[k].second[j].first <<", "<< cur_add_path[k].second[j].second;
-                }
-            }
+            //qDebug() <<  schet << "############################-----SPLIT 2------######################################";
+            //for(int k = 0; k < cur_add_path.size(); k++){
+            //    qDebug() << cur_add_path[k].first;
+            //    for(int j = 0; j < cur_add_path[k].second.size(); j ++){
+            //        qDebug() << j<< ' '<< cur_add_path[k].second[j].first <<", "<< cur_add_path[k].second[j].second;
+            //    }
+            //}
             cur_add_path.clear();
             schet += 1;
         }
@@ -344,11 +348,15 @@ void MainWindow::split2(std::vector<std::pair<QChar,std::vector<std::pair<float,
 
 void MainWindow::merge(){
     for(int k = 0; k < paths.size(); k++){
+        qDebug() << "ну допустим0";
         std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> cur_path = paths[k];
         std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> new_path;
+        qDebug() << "ну допустим1";
         for(int i = 0; i < cur_path.size(); i++){
+            qDebug() << "ну допустим2"<< cur_path[i].first;
             switch(cur_path[i].first.unicode()){
                 case 'C':{
+                    qDebug() << "ну допустим3";
                     for(int j = 0; j < cur_path[i].second.size(); j += 3){
                         std::pair<float, float> prev_point = new_path.back().second.back();
                         float sum = 0, final = 0;
@@ -379,6 +387,7 @@ void MainWindow::merge(){
                     break;
                 }
                 case 'L':{
+                    qDebug() << "или подожди";
                     if(new_path.back().first == 'L'){
                         for(std::pair<float, float> t: cur_path[i].second){
                             new_path.back().second.push_back(t);
@@ -388,11 +397,15 @@ void MainWindow::merge(){
                     }
                     break;
                 }
-                default:
+                default:{
+                    qDebug() << "ой пиздеееееееец";
                     new_path.push_back(cur_path[i]);
+                    qDebug() << "ой пиздеееееееец после";
                     break;
+                }
             }
         }
+        qDebug() << "после цикла"<< new_path.size();
         //qDebug() << "############################-----MERGE------######################################";
         //for(int k = 0; k < std::max(cur_path.size(), new_path.size()); k++){
             //if(k < new_path.size() && k < cur_path.size()){
@@ -429,18 +442,27 @@ void MainWindow::merge(){
             qDebug() << "URRRAAAAAAAAAaa";
             std::vector<std::pair<float, float>> new_L;
             if(new_path[1].second.size() > 1){
+                qDebug() << "тупое говно тупого говна до";
                 new_L.push_back(new_path[1].second[1]);
+                qDebug() << "тупое говно тупого говна после";
             }
             else{
+                qDebug() << "пидорас до";
                 new_L.push_back(new_path[2].second[0]);
+                qDebug() << "пидорас после";
             }
             new_path.push_back(std::make_pair('L', new_L));
+            qDebug() << "ебаное говнище";
         }
         else{
+            qDebug() << "жопа до";
             new_path.push_back(new_path[1]);
+            qDebug() << "жопа";
         }
         paths[k] = new_path;
+        qDebug() << "POMENYALY";
     }
+    qDebug() << "KONETS";
 }
 
 void MainWindow::check_dubles(){
@@ -487,19 +509,19 @@ float MainWindow::intersec_line(std::pair<float, float> P0, std::pair<float, flo
 }
 
 bool MainWindow::inner_angle(std::pair<float, float> check_point){
-    QGraphicsTextItem* t2 = new QGraphicsTextItem();
-    t2->setPlainText(QString::fromStdString("CP: " + std::to_string((int)check_point.first)) + "\n" + QString::fromStdString(std::to_string((int)check_point.second)));
-    t2->setX(check_point.first*ratio_x*scale);
-    t2->setY(check_point.second*ratio_y*scale + 10);
-    scene->addItem(t2);
-    qDebug()<< "#############--CHECHPOINT--#####################";
+    //QGraphicsTextItem* t2 = new QGraphicsTextItem();
+    //t2->setPlainText(QString::fromStdString("CP: " + std::to_string((int)check_point.first)) + "\n" + QString::fromStdString(std::to_string((int)check_point.second)));
+    //t2->setX(check_point.first*ratio_x*scale);
+    //t2->setY(check_point.second*ratio_y*scale + 20);
+    //scene->addItem(t2);
+    qDebug()<< "#############--CHECKPOINT--#####################";
     qDebug() << "check_point info" << check_point;
     std::vector<float> intersections = {check_point.second};
     for(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> path:paths){
         qDebug() << "GOV";
         for(int i = 1; i < path.size() - 1; i++){
             //исправить потом
-            if(path[i].first == 'O'){
+            if(path[i].first == 'L'){
                 if(((check_point.first <= path[i-1].second.back().first && check_point.first >= path[i].second[0].first) || (check_point.first >= path[i-1].second.back().first && check_point.first <= path[i].second[0].first)) && path[i-1].second.back().first != path[i].second[0].first){
                     qDebug() << "ZAL";
                     intersections.push_back(intersec_line(path[i-1].second.back(), path[i].second[0], check_point.first));
@@ -538,9 +560,17 @@ bool MainWindow::inner_angle(std::pair<float, float> check_point){
     std::vector<float> intersections_new = {intersections[0]};
     //qDebug() << "OII";
     while(i != intersections.size()){
-        if((intersections[i] - intersections[i-1]) > 0.1 || intersections[i] == check_point.second || intersections[i-1]){
-            qDebug() << intersections[i - 1] << ' ' << intersections[i] << intersections[i] - intersections[i-1];
-            intersections_new.push_back(intersections[i]);
+        if((intersections[i] - intersections[i-1]) > 5 || intersections[i] == check_point.second){
+            if(intersections[i-1] == check_point.second && i - 2 > -1){
+                  if(intersections[i-2] - intersections[i] > 5){
+                      qDebug() << intersections[i - 1] << ' ' << intersections[i] << intersections[i] - intersections[i-1];
+                      intersections_new.push_back(intersections[i]);
+                  }
+            }
+            else{
+                qDebug() << intersections[i - 1] << ' ' << intersections[i] << intersections[i] - intersections[i-1];
+                intersections_new.push_back(intersections[i]);
+            }
         }
         i += 1;
     }
@@ -552,11 +582,11 @@ bool MainWindow::inner_angle(std::pair<float, float> check_point){
     }
     qDebug() << "#############INTERSECTIONS#################";
     for(float i: intersections){
-        QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem();
-        circle2->setRect(check_point.first*ratio_x*scale - 2, i*ratio_y*scale - 2, 4, 4);
-        circle2->setBrush(QBrush(Qt::green));
-        circle2->setPen(QPen(QBrush(Qt::black),1));
-        scene->addItem(circle2);
+        //QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem();
+        //circle2->setRect(check_point.first*ratio_x*scale - 2, i*ratio_y*scale - 2, 4, 4);
+        //circle2->setBrush(QBrush(Qt::green));
+        //circle2->setPen(QPen(QBrush(Qt::black),1));
+        //scene->addItem(circle2);
         qDebug() << "intersections element" << i;
     }
 
@@ -598,100 +628,34 @@ void MainWindow::degrees(std::pair<float, float> P0, std::pair<float, float> P1,
         bool inner = inner_angle(std::make_pair(x, y));
 
         if(inner && degree <= 90){
+            sharp_ang_number += 1;
             QGraphicsEllipseItem* circle5 = new QGraphicsEllipseItem();
             circle5->setRect(P1.first*ratio_x*scale - 5, P1.second*ratio_y*scale - 5, 10, 10);
             circle5->setBrush(QBrush(Qt::green));
             circle5->setPen(QPen(QBrush(Qt::black),2));
             scene->addItem(circle5);
+
+            QGraphicsTextItem* t1 = new QGraphicsTextItem();
+            t1->setPlainText(QString::fromStdString(std::to_string(360 - (int)std::round(std::acos(cosinus)*180/pi))));
+            t1->setX(P1.first*ratio_x*scale);
+            t1->setY(P1.second*ratio_y*scale);
+            scene->addItem(t1);
         }
         else{
+            obtuse_ang_number += 1;
             QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem();
             circle2->setRect(P1.first*ratio_x*scale - 5, P1.second*ratio_y*scale - 5, 10, 10);
             circle2->setBrush(QBrush(Qt::yellow));
             circle2->setPen(QPen(QBrush(Qt::black),3));
             scene->addItem(circle2);
+
+            QGraphicsTextItem* t1 = new QGraphicsTextItem();
+            t1->setPlainText(QString::fromStdString(std::to_string((int)std::round(std::acos(cosinus)*180/pi))));
+            t1->setX(P1.first*ratio_x*scale);
+            t1->setY(P1.second*ratio_y*scale);
+            scene->addItem(t1);
         }
-        QGraphicsTextItem* t1 = new QGraphicsTextItem();
-        t1->setPlainText(QString::fromStdString(std::to_string((int)std::round(std::acos(cosinus)*180/pi))));
-        t1->setX(P1.first*ratio_x*scale);
-        t1->setY(P1.second*ratio_y*scale);
-        scene->addItem(t1);
-
     }
-
-    //if(std::round(std::acos(cosinus)*180/pi) <= 90){
-    //    //доделать
-    //
-
-    //    //QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem();
-    //    //circle2->setRect(x*ratio_x*scale - 2, y*ratio_y*scale - 2, 4, 4);
-    //    //circle2->setBrush(QBrush(Qt::magenta));
-    //    //circle2->setPen(QPen(QBrush(Qt::black),1));
-    //    //scene->addItem(circle2);
-
-    //    //QGraphicsEllipseItem* circle = new QGraphicsEllipseItem();
-    //    //circle->setRect(P1.first*ratio_x*scale - 5, P1.second*ratio_y*scale - 5, 10, 10);
-    //    //circle->setBrush(QBrush(Qt::green));
-    //    //circle->setPen(QPen(QBrush(Qt::green),2));
-    //    //scene->addItem(circle);
-
-    //    //QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem();
-    //    //circle1->setRect(P0.first*ratio_x*scale - 2, P0.second*ratio_y*scale - 2, 4, 4);
-    //    //circle1->setBrush(QBrush(Qt::green));
-    //    //circle1->setPen(QPen(QBrush(Qt::black),2));
-    //    //scene->addItem(circle1);
-    //    ////QGraphicsEllipseItem* circle5 = new QGraphicsEllipseItem();
-    //    ////circle5->setRect(P1.first*ratio_x*scale - 5, P1.second*ratio_y*scale - 5, 10, 10);
-    //    ////circle5->setBrush(QBrush(Qt::green));
-    //    ////circle5->setPen(QPen(QBrush(Qt::black),2));
-    //    ////scene->addItem(circle5);
-    //    //QGraphicsEllipseItem* circle3 = new QGraphicsEllipseItem();
-    //    //circle3->setRect(P2.first*ratio_x*scale - 2, P2.second*ratio_y*scale - 2, 4, 4);
-    //    //circle3->setBrush(QBrush(Qt::green));
-    //    //circle3->setPen(QPen(QBrush(Qt::black),2));
-    //    //scene->addItem(circle3);
-
-    //    QGraphicsTextItem* t1 = new QGraphicsTextItem();
-    //    t1->setPlainText(QString::fromStdString(std::to_string((int)std::round(std::acos(cosinus)*180/pi))));
-    //    t1->setX(P1.first*ratio_x*scale);
-    //    t1->setY(P1.second*ratio_y*scale);
-    //    scene->addItem(t1);
-
-    //    QGraphicsTextItem* t3 = new QGraphicsTextItem();
-    //    t3->setPlainText(QString::fromStdString(std::to_string((int)P1.first)) + " " + QString::fromStdString(std::to_string((int)P1.second)));
-    //    t3->setX(P1.first*ratio_x*scale);
-    //    t3->setY(P1.second*ratio_y*scale + 10);
-    //    scene->addItem(t3);
-    //}
-    //else if(std::round(std::acos(cosinus)*180/pi) < 175){
-    //    //QGraphicsEllipseItem* circle = new QGraphicsEllipseItem();
-    //    //circle->setRect(P1.first*ratio_x*scale - 5, P1.second*ratio_y*scale - 5, 10, 10);
-    //    //circle->setBrush(QBrush(Qt::blue));
-    //    //circle->setPen(QPen(QBrush(Qt::blue),2));
-    //    //scene->addItem(circle);
-
-    //    //QGraphicsEllipseItem* circle1 = new QGraphicsEllipseItem();
-    //    //circle1->setRect(P0.first*ratio_x*scale - 2, P0.second*ratio_y*scale - 2, 4, 4);
-    //    //circle1->setBrush(QBrush(Qt::yellow));
-    //    //circle1->setPen(QPen(QBrush(Qt::black),2));
-    //    //scene->addItem(circle1);
-    //    ////QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem();
-    //    ////circle2->setRect(P1.first*ratio_x*scale - 5, P1.second*ratio_y*scale - 5, 10, 10);
-    //    ////circle2->setBrush(QBrush(Qt::yellow));
-    //    ////circle2->setPen(QPen(QBrush(Qt::black),3));
-    //    ////scene->addItem(circle2);
-    //    //QGraphicsEllipseItem* circle3 = new QGraphicsEllipseItem();
-    //    //circle3->setRect(P2.first*ratio_x*scale - 2, P2.second*ratio_y*scale - 2, 4, 4);
-    //    //circle3->setBrush(QBrush(Qt::yellow));
-    //    //circle3->setPen(QPen(QBrush(Qt::black),2));
-    //    //scene->addItem(circle3);
-
-    //    //QGraphicsTextItem* t1 = new QGraphicsTextItem();
-    //    //t1->setPlainText(QString::fromStdString(std::to_string((int)std::round(std::acos(cosinus)*180/pi))));
-    //    //t1->setX(P1.first*ratio_x*scale);
-    //    //t1->setY(P1.second*ratio_y*scale);
-    //    //scene->addItem(t1);
-    //}
 }
 
 void MainWindow::angles(){
@@ -709,24 +673,47 @@ void MainWindow::angles(){
                     P0 = points[i-1].second.back();
                     P1 = points[i].second[0];
                     P2 = points[i].second[1];
+                    degrees(P0, P1, P2, points);
+
+                    //QGraphicsTextItem* t2 = new QGraphicsTextItem();
+                    //t2->setPlainText(QString::fromStdString("Нач.вн." + std::to_string(i)));
+                    //t2->setX(P1.first*ratio_x*scale);
+                    //t2->setY(P1.second*ratio_y*scale);
+                    //scene->addItem(t2);
                 }
                 else{
                     //начальная и конечная внутренняя объединены
-                    P0 = points[i-1].second.back();
-                    P1 = points[i].second[0];
-                    P2 = points[i+1].second[0];
+                    //P0 = points[i-1].second.back();
+                    //P1 = points[i].second[0];
+                    //P2 = points[i+1].second[0];
+                    //degrees(P0, P1, P2, points);
+                    //QGraphicsTextItem* t2 = new QGraphicsTextItem();
+                    //t2->setPlainText(QString::fromStdString("Нач + кон"+ std::to_string(i)));
+                    //t2->setX(P1.first*ratio_x*scale);
+                    //t2->setY(P1.second*ratio_y*scale);
+                    //scene->addItem(t2);
                 }
-                degrees(P0, P1, P2, points);
+
 
                 //тру внутренние
                 //3 и больше точек
                 for(int j = 1; j < points[i].second.size() - 1; j++){
                     degrees(points[i].second[j-1], points[i].second[j], points[i].second[j+1], points);
+                    //QGraphicsTextItem* t2 = new QGraphicsTextItem();
+                    //t2->setPlainText(QString::fromStdString("тру внутренние"+ std::to_string(i)));
+                    //t2->setX(points[i].second[j].first*ratio_x*scale);
+                    //t2->setY(points[i].second[j].second*ratio_y*scale);
+                    //scene->addItem(t2);
                 }
             }
             else if(points[i].first == 'C'){
                 for(int j = 1; j < points[i].second.size() - 2; j += 3){
                     degrees(points[i].second[j], points[i].second[j+1], points[i].second[j+2], points);
+                    //QGraphicsTextItem* t2 = new QGraphicsTextItem();
+                    //t2->setPlainText(QString::fromStdString("С"));
+                    //t2->setX(points[i].second[j+1].first*ratio_x*scale);
+                    //t2->setY(points[i].second[j+1].second*ratio_y*scale);
+                    //scene->addItem(t2);
                 }
             }
         }
@@ -745,9 +732,16 @@ void MainWindow::angles(){
                 P1 = points[i].second[0];
                 P2 = points[i+1].second[0];
             }
+            //QGraphicsTextItem* t2 = new QGraphicsTextItem();
+            //t2->setPlainText(QString::fromStdString("Стыки"+ std::to_string(i)));
+            //t2->setX(P1.first*ratio_x*scale);
+            //t2->setY(P1.second*ratio_y*scale);
+            //scene->addItem(t2);
             degrees(P0, P1, P2, points);
         }
     }
+    ui->label_obtuse_angles_number->setText(QString::fromStdString(std::to_string(obtuse_ang_number)));
+    ui->label_sharp_angles_number->setText((QString::fromStdString(std::to_string(sharp_ang_number))));
 }
 
 

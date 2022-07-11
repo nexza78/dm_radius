@@ -7,12 +7,13 @@
 #include <QDomDocument>
 #include <QFile>
 #include <QFileDialog>
+
 #include <QGraphicsEllipseItem>
 #include <QGraphicsRectItem>
-
 #include <QGraphicsScene>
 #include <QGraphicsSvgItem>
 #include <QGraphicsTextItem>
+
 #include <QMessageBox>
 #include <QStringRef>
 #include <QSvgGenerator>
@@ -21,7 +22,9 @@
 #include <QPainter>
 #include <QPen>
 #include <QStringList>
+
 #include <vector>
+#include <set>
 
 #include "CubicBezier.h"
 
