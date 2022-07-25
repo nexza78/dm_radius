@@ -8,20 +8,24 @@ float CubicBezier::coordinateY(float t){
     return ((1-t)*(1-t)*(1-t)*P0.second + 3*(1-t)*(1-t)*t*P1.second + 3*(1-t)*t*t*P2.second + t*t*t*P3.second);
 }
 
-float CubicBezier::xt(float t, float scale, float ratio){
-    return (-3*(1-t)*(1-t)*P0.first + (9*t*t-12*t+3)*P1.first + (6*t - 9*t*t)*P2.first + 3*t*t*P3.first)*ratio*scale;
+float CubicBezier::xt(float t){
+    return (-3*(1-t)*(1-t)*P0.first + (9*t*t-12*t+3)*P1.first + (6*t - 9*t*t)*P2.first + 3*t*t*P3.first);
 }
 
-float CubicBezier::yt(float t, float scale, float ratio){
-    return (-3*(1-t)*(1-t)*P0.second + (9*t*t-12*t+3)*P1.second + (6*t - 9*t*t)*P2.second + 3*t*t*P3.second)*ratio*scale;
+float CubicBezier::yt(float t){
+    return (-3*(1-t)*(1-t)*P0.second + (9*t*t-12*t+3)*P1.second + (6*t - 9*t*t)*P2.second + 3*t*t*P3.second);
 }
 
-float CubicBezier::xtt(float t, float scale, float ratio){
-    return (6*(1-t)*P0.first + (18*t - 12)*P1.first + (6-18*t)*P2.first + 6*t*P3.first)*ratio*scale;
+float CubicBezier::xtt(float t){
+    return (6*(1-t)*P0.first + (18*t - 12)*P1.first + (6-18*t)*P2.first + 6*t*P3.first);
 }
 
-float CubicBezier::ytt(float t, float scale, float ratio){
-    return (6*(1-t)*P0.second + (18*t - 12)*P1.second + (6-18*t)*P2.second + 6*t*P3.second)*ratio*scale;
+float CubicBezier::ytt(float t){
+    return (6*(1-t)*P0.second + (18*t - 12)*P1.second + (6-18*t)*P2.second + 6*t*P3.second);
+}
+
+float CubicBezier::distance(std::pair<float, float> P0, std::pair<float, float> P1){
+    return std::sqrt((P0.first  - P1.first) *(P0.first  - P1.first) + (P0.second - P1.second)*(P0.second - P1.second));
 }
 
 void CubicBezier::t_intersec_inputX(QGraphicsScene *&scene, std::vector<float> &intersections, float x, float scale, float ratio, float ratio_y, float epsilon){
@@ -43,9 +47,6 @@ void CubicBezier::t_intersec_inputX(QGraphicsScene *&scene, std::vector<float> &
         //circle2->setBrush(QBrush(Qt::white));
         //circle2->setPen(QPen(QBrush(Qt::magenta),3));
         //scene->addItem(circle2);
-
-
-
         if((int)x == 15822){
             qDebug() << "old, newVal, t, t0 " << old << ' ' << newVal << ' '<< t << ' ' << t0;
 
@@ -115,34 +116,88 @@ void CubicBezier::t_intersec_inputX(QGraphicsScene *&scene, std::vector<float> &
     return;
 }
 
-void CubicBezier::radiuses(QGraphicsScene *&scene, float scale){
-    float minR = INFINITY;
+float CubicBezier::rad_to_sec(float rad){
+    return (19.30039 + (150.7729 - 19.30039)/(1 + std::pow((rad/23.01228),1.117323)))/45;
+}
+
+void CubicBezier::radiuses(QGraphicsScene *&scene, std::set<std::vector<std::pair<float, float>>> &rad_info, float scale, float ratio_x, float ratio_y, float &time){
     float cx = 0;
     float cy = 0;
 
-    for(float t = 0.1; t < 1; t+= 0.1){
-        float denom = ytt(scale, t)*xt(scale, t) - xtt(scale, t)*yt(scale, t);
+    for(float t = 0; t < 1.001; t+= 0.001){
+        qDebug() << t;
+        float denom = ytt(t)*xt(t) - xtt(t)*yt(t);
         if(denom != 0){
-            float numerator = xt(scale, t)*xt(scale, t) + yt(scale, t)*yt(scale, t);
-             float R = numerator*std::sqrt(numerator)/denom;
-             //real size R
-             if(R < minR){
-                 minR = R;
-                 //cx = coordinateX(t)*scale*ratio_x - yt(scale, t)*numerator/denom;
-                 //cy = coordinateY(t)*scale*ratio_y + xt(scale, t)*numerator/denom;
-                 QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem();
-                 //circle2->setRect(coordinateX(scale, t) - 2, coordinateY(scale, t) - 2, 4, 4);
-                 circle2->setBrush(QBrush(Qt::yellow));
-                 circle2->setPen(QPen(QBrush(Qt::black),2));
-                 scene->addItem(circle2);
+            float numerator = xt(t)*xt(t) + yt(t)*yt(t);
+            float R = numerator*std::sqrt(numerator)/denom;
+            if(abs(R) < 500){
+                float ang_start = t;
+                while(abs(R) < 500 && t < ){
+                    t += 0.01;
+                    denom = ytt(t)*xt(t) - xtt(t)*yt(t);
+                    if(denom != 0){
+                        numerator = xt(t)*xt(t) + yt(t)*yt(t);
+                        R = numerator*std::sqrt(numerator)/denom;
+                    }
+                }
+
+            }
+            else if(abs(R) <= 50000 && abs(R) >= 500){
+
+                qDebug() << "radius" << R;
+
+                cx = coordinateX(t) - yt(t)*numerator/denom;
+                cy = coordinateY(t) + xt(t)*numerator/denom;
+                qDebug() << "radddd to sec" << rad_to_sec(abs(R)/100);
+                switch((int)(t*1000)){
+                    case 0:{
+                        float l = distance(std::make_pair(coordinateX(t), coordinateY(t)), std::make_pair(coordinateX(t+0.0005), coordinateY(t+0.0005)));
+                        float alfa = std::asin((l/2)/R);
+                        float x = 2*R*alfa;
+                        time += rad_to_sec(abs(R)/100)*x/100;
+                        std::vector<std::pair<float, float>> temp = {std::make_pair(coordinateX(t), coordinateY(t)), std::make_pair(R, rad_to_sec(R)*x)};
+                        rad_info.insert(temp);
+                        break;
+                    }
+                    case 1000:{
+                        float l = distance(std::make_pair(coordinateX(t), coordinateY(t)), std::make_pair(coordinateX(t-0.0005), coordinateY(t-0.0005)));
+                        float alfa = std::asin((l/2)/R);
+                        float x = 2*R*alfa;
+                        time += rad_to_sec(abs(R)/100)*x/100;
+                        std::vector<std::pair<float, float>> temp = {std::make_pair(coordinateX(t), coordinateY(t)), std::make_pair(R, rad_to_sec(R)*x)};
+                        rad_info.insert(temp);
+                        break;
+                    }
+                    default:{
+                        float l1 = distance(std::make_pair(coordinateX(t), coordinateY(t)), std::make_pair(coordinateX(t+0.0005), coordinateY(t+0.0005)));
+                        float alfa1 = std::asin((l1/2)/R);
+                        float x1 = 2*R*alfa1;
+
+                        float l = distance(std::make_pair(coordinateX(t), coordinateY(t)), std::make_pair(coordinateX(t-0.0005), coordinateY(t-0.0005)));
+                        float alfa = std::asin(l/2/R);
+                        float x = 2*R*alfa;
+                        time += rad_to_sec(abs(R)/100)*(x + x1)/100;
+
+                        std::vector<std::pair<float, float>> temp = {std::make_pair(coordinateX(t), coordinateY(t)), std::make_pair(R, rad_to_sec(R)*(x + x1))};
+                        rad_info.insert(temp);
+                        break;
+
+                    }
+                }
+
+                //QGraphicsEllipseItem* circle3 = new QGraphicsEllipseItem();
+                //circle3->setRect(cx*scale*ratio_x - abs(R)*scale*ratio_x, cy*scale*ratio_y - abs(R)*scale*ratio_y, abs(R)*2*scale*ratio_x, abs(R)*2*scale*ratio_y);
+                //circle3->setBrush(QBrush(Qt::transparent));
+                //circle3->setPen(QPen(QBrush(Qt::green, Qt::BrushStyle( Qt::DotLine)),2));
+                //scene->addItem(circle3);
+
+                //QGraphicsEllipseItem* circle2 = new QGraphicsEllipseItem();
+                //circle2->setRect(coordinateX(t)*scale*ratio_x - 2, coordinateY(t)*scale*ratio_y - 2, 4, 4);
+                //circle2->setBrush(QBrush(Qt::yellow));
+                //circle2->setPen(QPen(QBrush(Qt::black),2));
+                //scene->addItem(circle2);
              }
         }
     }
-    if(minR != INFINITY){
-        QGraphicsEllipseItem* circle3 = new QGraphicsEllipseItem();
-        circle3->setRect(cx - minR, cy - minR, minR*2, minR*2);
-        circle3->setBrush(QBrush(Qt::transparent));
-        circle3->setPen(QPen(QBrush(Qt::green),2));
-        scene->addItem(circle3);
-    }
+
 }

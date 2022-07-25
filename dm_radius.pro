@@ -10,11 +10,13 @@ CONFIG += c++11
 
 SOURCES += \
     CubicBezier.cpp \
+    grscene.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     CubicBezier.h \
+    grscene.h \
     mainwindow.h
 
 FORMS += \

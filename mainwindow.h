@@ -7,12 +7,15 @@
 #include <QDomDocument>
 #include <QFile>
 #include <QFileDialog>
+#include <QtWidgets>
 
 #include <QGraphicsEllipseItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSvgItem>
 #include <QGraphicsTextItem>
+#include <QMouseEvent>
 
 #include <QMessageBox>
 #include <QStringRef>
@@ -27,6 +30,7 @@
 #include <set>
 
 #include "CubicBezier.h"
+#include "grscene.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -46,8 +50,6 @@ private slots:
 
     void on_pushButton_analyze_clicked();
 
-    void on_spinBox_valueChanged(int arg1);
-
 private:
     Ui::MainWindow *ui;
     bool path_was_chosen = false;
@@ -66,7 +68,7 @@ private:
      /// обозначающая тип линии, а вторым элементом будет вектор из точек. Все точки имеют две координаты. Точки нельзя
      /// считать реальными значениями, т.к. обработка относительности точек еще не произошла
     static std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> split(QString points);
-
+    std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> split_polygon(QString points);
     ///@brief Обработка относительности, замена H и V на L
     static std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> toUpperCase(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points);
 
@@ -81,10 +83,12 @@ private:
     void rad_cubic(std::pair<float, float> P0, std::pair<float, float> P1,std::pair<float, float> P2,std::pair<float, float> P3);
     void degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2, std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> path);
     void split2(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> );
-
+    std::set<std::vector<std::pair<float, float>>> rad_info;
+    float curve_time = 0;
     float ratio_x = 1;
     float ratio_y = 1;
     float scale = 1;
+    float perimetr = 0;
     QGraphicsSvgItem *main_item = nullptr;
 };
 #endif // MAINWINDOW_H

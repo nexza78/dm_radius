@@ -6,9 +6,14 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    scene = new QGraphicsScene();
-    ui->graphicsView->setScene(scene);
-    scene->setSceneRect(0,0,400,400);
+    //scene = new GrScene();
+    //scene->installEventFilter(this);
+    //installEventFilter(scene);
+    //ui->graphicsView_central->setScene(scene);
+    //ui->graphicsView_central->setMouseTracking(true);
+    //scene->setSceneRect(0,0,400,400);
+    //ui->graphicsView->scene()->installEventFilter(this);
+    //ui->graphicsView->installEventFilter(this);
 }
 
 MainWindow::~MainWindow()
@@ -19,6 +24,11 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_review_clicked()
 {
     QString file_path = QFileDialog::getOpenFileName(this, "Выберите файл", "", "svg-files (*.svg)");
+
+    if(file_path == ""){
+        return;
+    }
+
     ui->lineEdit_path->setText(file_path);
     path_was_chosen = true;
 
@@ -26,11 +36,10 @@ void MainWindow::on_pushButton_review_clicked()
     main_item = new QGraphicsSvgItem(path);
     ratio_x = (main_item->renderer()->defaultSize().width()*1.0)/main_item->renderer()->viewBox().width();
     ratio_y = (main_item->renderer()->defaultSize().height()*1.0)/main_item->renderer()->viewBox().height();
-    //scale = 1000/(main_item->renderer()->defaultSize().height()*1.0);
     scale = 1000/(main_item->renderer()->defaultSize().height()*1.0);
     main_item->setScale(scale);
-    scene = new QGraphicsScene();
-    ui->graphicsView->setScene(scene);
+    scene = new GrScene(ratio_x, ratio_y, scale);
+    ui->graphicsView_central->setScene(scene);
     scene->addItem(main_item);
     qDebug() << main_item->renderer()->defaultSize().height() << main_item->renderer()->viewBox().height();
 }
@@ -43,26 +52,66 @@ void MainWindow::on_pushButton_review_clicked()
 //    }
 //}
 
+
+//до - все ништяк
+//split2
+//qDebug() << "#####################--PREPARED PATHS BEFORE FIRST MERGE--#######################";
+//for(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> i: paths){
+//    qDebug() << "#####################--PATH--#######################";
+//    for(int k = 0; k < i.size(); k++){
+//        qDebug() << i[k].first;
+//        for(int j = 0; j < i[k].second.size(); j ++){
+//            qDebug() << j<< ' '<< i[k].second[j].first <<", "<< i[k].second[j].second;
+//        }
+//    }
+//}
+//merge();
+//qDebug() << "#####################--PREPARED PATHS AFTER FIRST MERGE--#######################";
+//for(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> i: paths){
+//    qDebug() << "#####################--PATH--#######################";
+//    for(int k = 0; k < i.size(); k++){
+//        qDebug() << i[k].first;
+//        for(int j = 0; j < i[k].second.size(); j ++){
+//            qDebug() << j<< ' '<< i[k].second[j].first <<", "<< i[k].second[j].second;
+//        }
+//    }
+//}
+
 void MainWindow::on_pushButton_analyze_clicked()
 {
     paths.clear();
     sharp_ang_number = 0;
     obtuse_ang_number = 0;
+    curve_time = 0;
+    perimetr = 0;
 
     const QString filename = ui->lineEdit_path->text();
-    //QList<QGraphicsRectItem *> rectList;    // Объявим в стеке список прямоугольников
+    QDomDocument doc;
+    QFile file(filename);
 
-    QDomDocument doc;       // объект документа
-    QFile file(filename);   // Открываем наш SVG-файл
-    // Если он не открылся или не удалось передать содержимое в QDocDocument
     if (!file.open(QIODevice::ReadOnly) || !doc.setContent(&file))
-        return;    // то возвратим список, но пустой
+        return;
 
-    // Ищем в документе все объекты с тегом g
     QDomNodeList gList = doc.elementsByTagName("g");
     QDomNodeList pathList = doc.elementsByTagName("path");
-    // Начинаем их перебирать
+    QDomNodeList polygonList = doc.elementsByTagName("polygon");
 
+    // Начинаем их перебирать
+    for (int i = 0; i < polygonList.size(); i++){
+        QDomNode gNode = polygonList.item(i);
+        QDomElement polygon_data = gNode.toElement();
+        qDebug() << "polygon " << polygon_data.attribute("points");
+        QString cur_data = polygon_data.attribute("points");
+        std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>>  prepare_vector = split_polygon(cur_data);
+        qDebug() << i << "############################-----SPLIT POLYGON------######################################";
+
+        for(int k = 0; k < prepare_vector.size(); k++){
+            qDebug() << prepare_vector[k].first;
+            for(int j = 0; j < prepare_vector[k].second.size(); j ++){
+                qDebug() << j<< ' '<< prepare_vector[k].second[j].first <<", "<< prepare_vector[k].second[j].second;
+            }
+        }
+    }
     for (int i = 0; i < pathList.size(); i++){
         QDomNode gNode = pathList.item(i);     // Выделяем из списка ноду
         QDomElement path_data = gNode.toElement();
@@ -83,29 +132,7 @@ void MainWindow::on_pushButton_analyze_clicked()
         split2(prepare_vector);
         //проверка работы, вывод в дебаг
     }
-    //до - все ништяк
-    //split2
-    //qDebug() << "#####################--PREPARED PATHS BEFORE FIRST MERGE--#######################";
-    //for(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> i: paths){
-    //    qDebug() << "#####################--PATH--#######################";
-    //    for(int k = 0; k < i.size(); k++){
-    //        qDebug() << i[k].first;
-    //        for(int j = 0; j < i[k].second.size(); j ++){
-    //            qDebug() << j<< ' '<< i[k].second[j].first <<", "<< i[k].second[j].second;
-    //        }
-    //    }
-    //}
-    //merge();
-    //qDebug() << "#####################--PREPARED PATHS AFTER FIRST MERGE--#######################";
-    //for(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> i: paths){
-    //    qDebug() << "#####################--PATH--#######################";
-    //    for(int k = 0; k < i.size(); k++){
-    //        qDebug() << i[k].first;
-    //        for(int j = 0; j < i[k].second.size(); j ++){
-    //            qDebug() << j<< ' '<< i[k].second[j].first <<", "<< i[k].second[j].second;
-    //        }
-    //    }
-    //}
+
     std::set<std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>>> say_no_to_dubles(paths.begin(), paths.end());
     std::vector<std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>>> new_path(say_no_to_dubles.begin(), say_no_to_dubles.end());
     paths = new_path;
@@ -113,7 +140,7 @@ void MainWindow::on_pushButton_analyze_clicked()
 
     merge();
     qDebug() << "#####################--PREPARED PATHS--#######################";
-    int kolvo = 0;
+
     for(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> i: paths){
         qDebug() << "#####################--PATH--#######################";
         for(int k = 0; k < i.size(); k++){
@@ -136,7 +163,8 @@ void MainWindow::on_pushButton_analyze_clicked()
         }
     }
     angles();
-    //radiuses();
+    radiuses();
+    ui->label_curves_time->setText(QString::fromStdString(std::to_string(curve_time/60)));
     file.close();
     return;
 }
@@ -166,6 +194,31 @@ float MainWindow::get_point(QString points, int &j0){
 //дальше обрабатываем всю оставшуюся строку, разделив на эти точки
 //Внимание - здесь не обрабатываются "относительность" и "абсолютность"
 
+std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> MainWindow:: split_polygon(QString points){
+    std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> res;
+    points += "p";
+
+    int j0 = 0;
+    std::pair<QChar,std::vector<std::pair<float, float>>> cur_pair;
+    cur_pair.first = 'M';
+    std::pair<float, float> cur_point;
+    cur_point.first = get_point(points, j0);
+    cur_point.second = get_point(points, j0);
+    j0 += 1;
+    cur_pair.second.push_back(cur_point);
+    res.push_back(cur_pair);
+    cur_pair.first = 'L';
+    cur_pair.second.clear();
+    while(j0 < points.size()-2){
+        cur_point.first = get_point(points, j0);
+        cur_point.second = get_point(points, j0);
+        //j0 += 1;
+        cur_pair.second.push_back(cur_point);
+    }
+    res.push_back(cur_pair);
+    paths.push_back(res);
+    return res;
+}
 
 std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> MainWindow:: split(QString points){
     std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> res;
@@ -322,23 +375,20 @@ float MainWindow::distance(std::pair<float, float> P0, std::pair<float, float> P
     return std::sqrt((P0.first  - P1.first) *(P0.first  - P1.first) + (P0.second - P1.second)*(P0.second - P1.second));
 }
 
+//qDebug() <<  schet << "############################-----SPLIT 2------######################################";
+//for(int k = 0; k < cur_add_path.size(); k++){
+//    qDebug() << cur_add_path[k].first;
+//    for(int j = 0; j < cur_add_path[k].second.size(); j ++){
+//        qDebug() << j<< ' '<< cur_add_path[k].second[j].first <<", "<< cur_add_path[k].second[j].second;
+//    }
+//}
+
 void MainWindow::split2(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> cur_path){
     std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> cur_add_path;
-    //int schet = 0;
     for(std::pair<QChar,std::vector<std::pair<float, float>>> i: cur_path){
         if(i.first == 'Z'){
-            //для обработки стыка (чтобы не надо было отдельно его обрабатывать)
-
             paths.push_back(cur_add_path);
-            //qDebug() <<  schet << "############################-----SPLIT 2------######################################";
-            //for(int k = 0; k < cur_add_path.size(); k++){
-            //    qDebug() << cur_add_path[k].first;
-            //    for(int j = 0; j < cur_add_path[k].second.size(); j ++){
-            //        qDebug() << j<< ' '<< cur_add_path[k].second[j].first <<", "<< cur_add_path[k].second[j].second;
-            //    }
-            //}
             cur_add_path.clear();
-            schet += 1;
         }
         else{
             cur_add_path.push_back(i);
@@ -398,9 +448,7 @@ void MainWindow::merge(){
                     break;
                 }
                 default:{
-                    qDebug() << "ой пиздеееееееец";
                     new_path.push_back(cur_path[i]);
-                    qDebug() << "ой пиздеееееееец после";
                     break;
                 }
             }
@@ -452,7 +500,7 @@ void MainWindow::merge(){
                 qDebug() << "пидорас после";
             }
             new_path.push_back(std::make_pair('L', new_L));
-            qDebug() << "ебаное говнище";
+            qDebug() << "говнище";
         }
         else{
             qDebug() << "жопа до";
@@ -744,15 +792,6 @@ void MainWindow::angles(){
     ui->label_sharp_angles_number->setText((QString::fromStdString(std::to_string(sharp_ang_number))));
 }
 
-
-void MainWindow::on_spinBox_valueChanged(int arg1)
-{
-    if(main_item != nullptr){
-        main_item->setScale(main_item->scale()*1.2);
-    }
-
-}
-
 void MainWindow::radiuses(){
     for(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> points: paths){
         for(int i = 1; i < points.size() - 1; i++){
@@ -762,10 +801,19 @@ void MainWindow::radiuses(){
                 for(int j = 0; j < points[i].second.size(); j += 3){
                     qDebug() << i << ' ' << j;
                     CubicBezier curve(prev_point, points[i].second[j], points[i].second[j+1], points[i].second[j+2]);
-                    curve.radiuses(scene, scale);
+                    curve.radiuses(scene, rad_info, scale, ratio_x, ratio_y, curve_time);
                     prev_point = points[i].second[j+2];
                 }
             }
         }
     }
 }
+
+//void MainWindow::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+//{
+//    qDebug() << "sdfsdfds";
+//    ui->label_y->setText(QString::fromStdString(std::to_string(event->pos().y())));
+//    ui->label_x->setText(QString::fromStdString(std::to_string(event->pos().x())));
+//
+//}
+//
