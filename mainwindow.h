@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QtWidgets>
 
+#include <QColor>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
@@ -50,6 +51,10 @@ private slots:
 
     void on_pushButton_analyze_clicked();
 
+    void on_spinBox_obtuse_angles_number_valueChanged(int arg1);
+
+    void on_spinBox_sharp_angles_number_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     bool path_was_chosen = false;
@@ -82,13 +87,19 @@ private:
     void radiuses();
     void rad_cubic(std::pair<float, float> P0, std::pair<float, float> P1,std::pair<float, float> P2,std::pair<float, float> P3);
     void degrees(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2, std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> path);
+    void degrees_clon(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2);
     void split2(std::vector<std::pair<QChar,std::vector<std::pair<float, float>>>> );
     std::set<std::vector<std::pair<float, float>>> rad_info;
+    std::pair<float, float> intersec_2_lines(std::pair<float, float> P0, std::pair<float, float> P1, std::pair<float, float> P2, std::pair<float, float> P3);
     float curve_time = 0;
     float ratio_x = 1;
     float ratio_y = 1;
     float scale = 1;
     float perimetr = 0;
+    void comments();
+    void curve_to_ang();
+    std::vector<std::pair<float, float>> angle_points;
+    std::vector<std::vector<std::pair<float, float>>> curve_to_line_info;
     QGraphicsSvgItem *main_item = nullptr;
 };
 #endif // MAINWINDOW_H
